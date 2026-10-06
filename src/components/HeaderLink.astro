@@ -4,9 +4,13 @@ import type { HTMLAttributes } from 'astro/types';
 type Props = HTMLAttributes<'a'>;
 
 const { href, class: className, ...props } = Astro.props;
+// href 是带 base 前缀的站内链接（见 consts.ts 的 url()），而 pathname 剥掉了 base，
+// 所以比较前必须把 href 的 base 前缀也剥掉，否则高亮永远不生效。
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+const plainHref = href?.startsWith(base) ? href.slice(base.length) || '/' : href;
 const pathname = Astro.url.pathname.replace(import.meta.env.BASE_URL, '');
 const subpath = pathname.match(/[^\/]+/g);
-const isActive = href === pathname || href === '/' + (subpath?.[0] || '');
+const isActive = plainHref === pathname || plainHref === '/' + (subpath?.[0] || '');
 ---
 
 <a href={href} class:list={[className, { active: isActive }]} {...props}>
